@@ -1,25 +1,36 @@
 package com.example.java.gettingstarted;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 @RestController
 @RequestMapping("line")
 public class LineController {
+	
+	@Value("${access.token}")
+	private String token;
 	
 	
 	@RequestMapping(method=RequestMethod.POST, path = "/message")
@@ -39,6 +50,7 @@ public class LineController {
 			header.put(key, request.getHeader(key));
 		}
 
+		JsonArray events = null;
 		try(BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream(), "UTF-8"))){
 			StringBuilder sb = new StringBuilder();
 			String str;
@@ -48,8 +60,23 @@ public class LineController {
 				}
 				sb.append(str);
 			}
-			data.put("raw", sb.toString());
+			String json = sb.toString();
+			events = gson.fromJson(json, JsonObject.class).getAsJsonArray("events");
+			data.put("raw", json);
 		}
+		
+		for(int index=0;index<events.size();index++) {
+			JsonObject event = events.get(index).getAsJsonObject();
+			if("message".equals(event.get("type").getAsString())) {
+				JsonObject message = event.get("message").getAsJsonObject();
+				if("text".equals(message.get("type").getAsString())) {
+					String replyToken = event.get("replyToken").getAsString();
+					String text = message.get("text").getAsString();
+					this.replyMessage(replyToken, String.format("「%s」", text));
+				}
+			}
+		}
+		
 
 		data.put("header", header);
 		String result = gson.toJson(data);
@@ -57,4 +84,33 @@ public class LineController {
 		return "ok"; 
 	}
 
+
+	private void replyMessage(String replyToken, String message) throws IOException {
+		URL url = new URL("https://api.line.me/v2/bot/message/reply");
+		HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+		con.setRequestMethod("POST");
+		con.setRequestProperty("Content-Type", "application/json");
+		con.setRequestProperty("Authorization", String.format("Bearer %s", this.token));
+		
+		JsonArray messageAry = new JsonArray();
+		JsonObject messageElement = new JsonObject();
+		messageElement.addProperty("type", "text");
+		messageElement.addProperty("text", message);
+		messageAry.add(messageElement);
+		
+		JsonObject content = new JsonObject();
+		content.addProperty("replyToken", replyToken);
+		content.add("messages", messageAry);
+		String contentString = content.toString();
+		
+		con.setDoOutput(true);
+		try(BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(con.getOutputStream(), "UTF-8"))){
+			bw.write(contentString);
+		}
+		
+		int responseCode = con.getResponseCode();
+		System.out.printf("Code: %s, Content: %s\n", responseCode, contentString);
+	}
+
 }
+
