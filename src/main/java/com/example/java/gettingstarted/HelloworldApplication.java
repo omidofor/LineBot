@@ -17,17 +17,30 @@
 package com.example.java.gettingstarted;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 @SpringBootApplication
 @RestController
+@ComponentScan("com.example")
+@Configuration
+@EnableAutoConfiguration
 public class HelloworldApplication {
-  @RequestMapping("/")
-  public String home() {
-    return "Hello World!";
-  }
+	
+	private Gson gson;
+	
+	@RequestMapping("/")
+	public String home() {
+		return "Hello World!";
+	}
 
   /**
    * (Optional) App Engine health check endpoint mapping.
@@ -35,13 +48,25 @@ public class HelloworldApplication {
    * If your app does not handle health checks, a HTTP 404 response is interpreted
    *     as a successful reply.
    */
-  @RequestMapping("/_ah/health")
-  public String healthy() {
-    // Message body required though ignored
-    return "Still surviving.";
-  }
+	@RequestMapping("/_ah/health")
+	public String healthy() {
+		// Message body required though ignored
+		return "Still surviving.";
+	}
+  
+	@Bean
+	public Gson getVsmGson(){
+	if(this.gson == null) {
+		GsonBuilder builder = new GsonBuilder();
+		this.gson = builder.setPrettyPrinting().create();
+	}
+	
+	return this.gson;
+	}
 
-  public static void main(String[] args) {
-    SpringApplication.run(HelloworldApplication.class, args);
-  }
+	public static void main(String[] args) {
+		SpringApplication.run(HelloworldApplication.class, args);
+	}
+  
+	
 }
