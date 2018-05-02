@@ -1,5 +1,9 @@
 package com.example.java.gettingstarted;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,7 +23,7 @@ public class LineController {
 	
 	
 	@RequestMapping(method=RequestMethod.POST, path = "/message")
-	public String message(HttpServletRequest request, Gson gson) {
+	public String message(HttpServletRequest request, Gson gson) throws IOException {
 		Map<String, Object> data = new LinkedHashMap<>();
 		data.put("method", request.getMethod());
 		data.put("path", request.getPathInfo());
@@ -34,6 +38,19 @@ public class LineController {
 			String key = e.nextElement();
 			header.put(key, request.getHeader(key));
 		}
+
+		try(BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream(), "UTF-8"))){
+			StringBuilder sb = new StringBuilder();
+			String str;
+			while((str = br.readLine()) != null) {
+				if(sb.length() > 0) {
+					sb.append("\n");
+				}
+				sb.append(str);
+			}
+			data.put("raw", sb.toString());
+		}
+
 		data.put("header", header);
 		String result = gson.toJson(data);
 		System.out.println(result);
