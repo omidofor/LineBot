@@ -93,7 +93,7 @@ public class LineController {
 		return "ok"; 
 	}
 	
-	@RequestMapping(method=RequestMethod.POST, path = "/message_bak")
+	@RequestMapping(method=RequestMethod.POST, path = "/message")
 	public void message(@RequestBody String body, @RequestHeader HttpHeaders headers) throws IOException {
 		HttpRequest request = new HttpRequest();
 		request.Post();
