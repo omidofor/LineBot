@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.java.gettingstarted;
+package omi.app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -28,9 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import omi.app.util.HttpRequest;
+
 @SpringBootApplication
 @RestController
-@ComponentScan("com.example")
+@ComponentScan("omi.app")
 @Configuration
 @EnableAutoConfiguration
 public class HelloworldApplication {
@@ -64,7 +66,8 @@ public class HelloworldApplication {
 	return this.gson;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
+		HttpRequest.trustAllServer();
 		SpringApplication.run(HelloworldApplication.class, args);
 	}
   

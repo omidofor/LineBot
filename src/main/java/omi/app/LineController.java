@@ -1,4 +1,4 @@
-package com.example.java.gettingstarted;
+package omi.app;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -17,6 +18,9 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,16 +29,21 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import omi.app.util.HttpRequest;
+import omi.app.util.HttpResponse;
+
 @RestController
 @RequestMapping("line")
 public class LineController {
 	
 	@Value("${access.token}")
 	private String token;
+	@Value("${forward.url}")
+	private String forwardUrl;
 	
 	
-	@RequestMapping(method=RequestMethod.POST, path = "/message")
-	public String message(HttpServletRequest request, Gson gson) throws IOException {
+	@RequestMapping(method=RequestMethod.POST, path = "/message_bak")
+	public String message_bak(HttpServletRequest request, Gson gson) throws IOException {
 		Map<String, Object> data = new LinkedHashMap<>();
 		data.put("method", request.getMethod());
 		data.put("path", request.getPathInfo());
@@ -82,6 +91,18 @@ public class LineController {
 		String result = gson.toJson(data);
 		System.out.println(result);
 		return "ok"; 
+	}
+	
+	@RequestMapping(method=RequestMethod.POST, path = "/message_bak")
+	public void message(@RequestBody String body, @RequestHeader HttpHeaders headers) throws IOException {
+		HttpRequest request = new HttpRequest();
+		request.Post();
+		request.setParam(body);
+		for(Entry<String, List<String>> entry : headers.entrySet()) {
+			request.addHeader(entry.getKey(), entry.getValue().get(0));
+		}
+		HttpResponse response = request.perform();
+		System.out.printf("Return code: %s\nBody: %s\n", response.getResponseCode(), response.getBody());
 	}
 
 
