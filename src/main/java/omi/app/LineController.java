@@ -96,6 +96,7 @@ public class LineController {
 	@RequestMapping(method=RequestMethod.POST, path = "/message")
 	public void message(@RequestBody String body, @RequestHeader HttpHeaders headers) throws IOException {
 		HttpRequest request = new HttpRequest();
+		request.setUrl(this.forwardUrl);
 		request.Post();
 		request.setParam(body);
 		for(Entry<String, List<String>> entry : headers.entrySet()) {
